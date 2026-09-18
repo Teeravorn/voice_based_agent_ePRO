@@ -19,5 +19,6 @@ rad.json
 #License-files
 *.bclicense
 *.flf
+*.pyc
 #Test results file
 TestResults.xml
