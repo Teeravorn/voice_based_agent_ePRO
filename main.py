@@ -1,21 +1,213 @@
-from asr import ASR_Whisper
+"""POC runner: ไฟล์เสียงคำตอบผู้ป่วย -> ASR -> option extractor -> คะแนน QuickDASH
+
+รันได้สองโหมด และความต่างของสองโหมดนี้คือสิ่งที่ POC ต้องการวัด
+
+- ``text`` เอาประโยคต้นฉบับจาก manifest ป้อนเข้า extractor ตรง ๆ ไม่ผ่าน ASR
+  ผลที่ได้คือ **เพดานความแม่นของ extractor** และรันได้โดยไม่ต้องมีไฟล์เสียงหรือ GPU
+- ``asr`` ถอดเสียงจริงก่อนแล้วค่อยเข้า extractor ผลที่ได้คือ **ความแม่นของทั้ง pipeline**
+
+ตัวอย่างการใช้งาน
+    python main.py --mode text                 # ยังไม่ต้องมีไฟล์เสียง
+    python main.py --mode both                 # หลังอัดเสียงครบแล้ว
+    python main.py --mode text --model qwen3:8b
+    python main.py --only q9
+"""
+
+from __future__ import annotations
+
+import argparse
+import json
+import sys
 import time
-def main():
-    pass
+from datetime import datetime
+from pathlib import Path
+
+from engine import ChatEngine
+from evaluation.manifest import ManifestRow, load_manifest
+from evaluation.report import (
+    RunRecord,
+    print_failures,
+    print_mode_comparison,
+    print_summary,
+    print_table,
+    summarize,
+)
+from extractor import ExtractionResult, OptionExtractor, load_form
+
+ROOT = Path(__file__).resolve().parent
+DEFAULT_FORM = ROOT / "forms" / "quickdash_th.json"
+DEFAULT_MANIFEST = ROOT / "evaluation" / "manifest.csv"
+DEFAULT_AUDIO_DIR = ROOT / "evaluation" / "answers"
+DEFAULT_RESULTS_DIR = ROOT / "evaluation" / "results"
+
+ASR_MODEL_ID = "typhoon-ai/typhoon-whisper-turbo"
+
+
+def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
+    parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
+    parser.add_argument("--mode", choices=["text", "asr", "both"], default="text",
+                        help="text = ข้าม ASR, asr = ถอดเสียงจริง, both = รันทั้งสองแล้วเทียบกัน")
+    parser.add_argument("--model", default="qwen3:4b", help="ชื่อโมเดลใน ollama")
+    parser.add_argument("--form", type=Path, default=DEFAULT_FORM)
+    parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
+    parser.add_argument("--audio-dir", type=Path, default=DEFAULT_AUDIO_DIR)
+    parser.add_argument("--only", action="append", default=None,
+                        help="รันเฉพาะคำถามที่ระบุ ใส่ซ้ำได้ เช่น --only q9 --only q11")
+    parser.add_argument("--limit", type=int, default=None, help="รันแค่ N แถวแรก")
+    parser.add_argument("--out", type=Path, default=None, help="ที่เก็บผลดิบ (ค่าตั้งต้นอยู่ใน evaluation/results/)")
+    parser.add_argument("--asr-model", default=ASR_MODEL_ID)
+    return parser.parse_args(argv)
+
+
+def select_rows(rows: list[ManifestRow], only: list[str] | None, limit: int | None) -> list[ManifestRow]:
+    if only:
+        wanted = {item_id.strip() for item_id in only}
+        rows = [row for row in rows if row.item_id in wanted]
+    if limit is not None:
+        rows = rows[:limit]
+    return rows
+
+
+def run_text_mode(rows: list[ManifestRow], extractor: OptionExtractor) -> list[RunRecord]:
+    records = []
+    for index, row in enumerate(rows, start=1):
+        print(f"  [{index}/{len(rows)}] {row.audio} (text)", flush=True)
+        result = extractor.extract(row.script_th, row.item_id)
+        records.append(RunRecord(row=row, mode="text", transcript=row.script_th, result=result))
+    return records
+
+
+def run_asr_mode(rows: list[ManifestRow], extractor: OptionExtractor, audio_dir: Path, asr_model: str) -> list[RunRecord]:
+    existing = [(row, audio_dir / row.audio) for row in rows]
+    missing = [row.audio for row, path in existing if not path.exists()]
+    if len(missing) == len(rows):
+        print(f"\nไม่พบไฟล์เสียงเลยใน {audio_dir} ข้ามโหมด asr")
+        return [
+            RunRecord(row=row, mode="asr", transcript="", result=ExtractionResult(),
+                      skipped_reason="ไม่พบไฟล์เสียง")
+            for row in rows
+        ]
+    if missing:
+        print(f"\nไม่พบไฟล์เสียง {len(missing)} ไฟล์ จะข้ามไป: {', '.join(missing)}")
+
+    # import ตรงนี้ ไม่ใช่หัวไฟล์ เพราะโหมด text และกรณีที่ยังไม่มีไฟล์เสียง
+    # ไม่ควรต้องรอ torch โหลด
+    from asr import ASRWhisper
+
+    print(f"\nกำลังโหลด ASR ({asr_model}) ...")
+    asr = ASRWhisper()
+    asr.load_model(asr_model)
+
+    # warm up ครั้งแรกด้วยไฟล์จริงไฟล์แรก เพื่อไม่ให้เวลา compile/allocate ไปปนกับ
+    # เวลาที่จะรายงาน การวัด latency ครั้งแรกโดยไม่ warm up จะสูงกว่าความจริงหลายเท่า
+    first_audio = next((path for _, path in existing if path.exists()), None)
+    if first_audio is not None:
+        print("warm up ASR ...")
+        asr.transcribe_file(str(first_audio))
+
+    records = []
+    for index, (row, path) in enumerate(existing, start=1):
+        if not path.exists():
+            records.append(
+                RunRecord(row=row, mode="asr", transcript="", result=ExtractionResult(),
+                          skipped_reason="ไม่พบไฟล์เสียง")
+            )
+            continue
+
+        print(f"  [{index}/{len(existing)}] {row.audio} (asr)", flush=True)
+        started = time.perf_counter()
+        transcript = asr.transcribe_file(str(path))
+        asr_latency_ms = (time.perf_counter() - started) * 1000
+
+        result = extractor.extract(transcript, row.item_id)
+        records.append(
+            RunRecord(row=row, mode="asr", transcript=transcript, result=result,
+                      asr_latency_ms=asr_latency_ms)
+        )
+    return records
+
+
+def save_results(out_path: Path, payload: dict) -> None:
+    out_path.parent.mkdir(parents=True, exist_ok=True)
+    out_path.write_text(json.dumps(payload, ensure_ascii=False, indent=2), encoding="utf-8")
+    print(f"\nเก็บผลดิบไว้ที่ {out_path}")
+
+
+def main(argv: list[str] | None = None) -> int:
+    args = parse_args(argv)
+
+    form = load_form(args.form)
+    rows = select_rows(load_manifest(args.manifest), args.only, args.limit)
+    if not rows:
+        print("ไม่มีแถวให้รัน (ลองตรวจ --only / --limit)")
+        return 1
+
+    # ตรวจ manifest กับฟอร์มก่อนเสียเวลาโหลดโมเดล
+    for row in rows:
+        item = form.item(row.item_id)
+        scale = form.scale_for(item)
+        for gold in row.gold_values:
+            if gold != 0 and not scale.is_valid(gold):
+                print(f"manifest ผิด: {row.audio} เฉลย {gold} ไม่อยู่ใน scale {scale.id} ของ {row.item_id}")
+                return 1
+
+    engine = ChatEngine(model=args.model)
+    if not engine.health():
+        print("เรียก Ollama ไม่ได้ ตรวจว่า server รันอยู่หรือยัง (ollama serve) แล้วลองใหม่")
+        return 1
+
+    extractor = OptionExtractor(engine=engine, form=form)
+
+    print(f"ฟอร์ม   : {form.title_th} ({form.form_id} v{form.version})")
+    print(f"โมเดล   : {args.model}")
+    print(f"จำนวน   : {len(rows)} คำตอบ จาก {len({row.item_id for row in rows})} คำถาม")
+
+    text_records = asr_records = None
+    text_summary = asr_summary = None
+
+    if args.mode in ("text", "both"):
+        print("\nรันโหมด text (ข้าม ASR) ...")
+        text_records = run_text_mode(rows, extractor)
+        text_summary = summarize(text_records, "text")
+        print_table(text_records, "text")
+        print_failures(text_records)
+        print_summary(text_summary)
+
+    if args.mode in ("asr", "both"):
+        asr_records = run_asr_mode(rows, extractor, args.audio_dir, args.asr_model)
+        asr_summary = summarize(asr_records, "asr")
+        if asr_summary.n:
+            print_table(asr_records, "asr")
+            print_failures(asr_records)
+            print_summary(asr_summary)
+
+    print_mode_comparison(text_summary, asr_summary if asr_summary and asr_summary.n else None)
+
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+    out_path = args.out or DEFAULT_RESULTS_DIR / f"run_{timestamp}.json"
+    save_results(
+        out_path,
+        {
+            "timestamp": timestamp,
+            "form": {"form_id": form.form_id, "version": form.version},
+            "llm_model": args.model,
+            "asr_model": args.asr_model if args.mode in ("asr", "both") else None,
+            "mode": args.mode,
+            "summaries": {
+                name: summary.as_dict()
+                for name, summary in (("text", text_summary), ("asr", asr_summary))
+                if summary is not None
+            },
+            "records": [
+                record.to_dict()
+                for records in (text_records, asr_records)
+                if records
+                for record in records
+            ],
+        },
+    )
+    return 0
+
 
 if __name__ == "__main__":
-    # main()
-
-    file_path = "ASR/Test/test_1.wav"
-    model_id = "typhoon-ai/typhoon-whisper-turbo"
-    
-    asr = ASR_Whisper()
-    asr.load_model(model_id)
-
-    while(1):
-        file_path = input("path: ")
-
-        start_time = time.time()
-        result = asr.transcrive_file(file_path)
-        end_time = time.time()
-        print(f"elapsed time {end_time-start_time} seconds")
+    sys.exit(main())

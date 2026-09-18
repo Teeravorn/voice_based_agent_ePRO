@@ -22,3 +22,15 @@ rad.json
 *.pyc
 #Test results file
 TestResults.xml
+# --- Python / POC ---
+__pycache__/
+*.py[cod]
+.pytest_cache/
+.venv/
+venv/
+
+# ผลการรันและไฟล์เสียงที่อัดเอง ไม่ต้องขึ้น git
+evaluation/results/*.json
+evaluation/answers/*.wav
+evaluation/answers/*.m4a
+evaluation/answers/*.mp3

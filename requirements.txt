@@ -1,0 +1,16 @@
+# เวอร์ชันที่ POC นี้ทดสอบแล้วว่าใช้งานได้ (conda env ชื่อ thesis, Python 3.14)
+#
+# torch ต้องติดตั้งจาก index ของ CUDA ให้ตรงกับเครื่อง ไม่ใช่จาก PyPI ปกติ เช่น
+#   pip install torch --index-url https://download.pytorch.org/whl/cu128
+#
+# นอกจากนี้ต้องมีของที่ไม่ได้ติดตั้งผ่าน pip อีกสองอย่าง
+#   1. ffmpeg อยู่ใน PATH  (transformers ใช้อ่านไฟล์เสียงและ resample เป็น 16 kHz)
+#   2. Ollama server รันอยู่ พร้อมโมเดลที่จะใช้  (ollama pull qwen3:4b)
+
+torch==2.10.0+cu128
+transformers==5.3.0
+accelerate==1.13.0
+numpy==2.4.3
+ollama==0.6.2
+
+pytest==9.1.1

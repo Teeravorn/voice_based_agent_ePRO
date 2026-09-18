@@ -1,1 +1,1 @@
-from .whisper_asr import ASR_Whisper
+from .whisper_asr import ASRWhisper
