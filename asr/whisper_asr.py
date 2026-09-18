@@ -29,7 +29,7 @@ class ASR_Whisper:
                 model= self.model,
                 tokenizer= self.processor.tokenizer,
                 feature_extractor= self.processor.feature_extractor,
-                max_new_tokens=444,
+                # max_new_tokens=448,
                 chunk_length_s=30,
                 batch_size=16,
                 return_timestamps=True,

@@ -12,7 +12,6 @@ if __name__ == "__main__":
     asr = ASR_Whisper()
     asr.load_model(model_id)
 
-
     while(1):
         file_path = input("path: ")
 
