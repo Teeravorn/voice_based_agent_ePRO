@@ -30,7 +30,7 @@ __pycache__/
 venv/
 
 # ผลการรันและไฟล์เสียงที่อัดเอง ไม่ต้องขึ้น git
-evaluation/results/*.json
-evaluation/answers/*.wav
-evaluation/answers/*.m4a
-evaluation/answers/*.mp3
+# evaluation/results/*.json
+# evaluation/answers/*.wav
+# evaluation/answers/*.m4a
+# evaluation/answers/*.mp3
