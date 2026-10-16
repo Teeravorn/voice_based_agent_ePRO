@@ -79,9 +79,25 @@ python main.py --mode both
 
 ```bash
 python main.py --mode text --model qwen3:8b     # เทียบโมเดล
+python main.py --engine systemone --mode asr    # ใช้ OpenThai-SystemOne แทน qwen
+python main.py --think off                      # ปิด reasoning ของ qwen (เร็วกว่า 12 เท่า)
 python main.py --only q9 --only q11             # รันเฉพาะบางข้อ
 python main.py --mode text --limit 5            # รันแค่ 5 แถวแรก
 ```
+
+### ความเร็วที่วัดได้
+
+วัดบนคำตอบ 15 อันชุดเดียวกัน แยกกระบวนการละ engine (ASR อยู่ร่วมใน VRAM ด้วย
+ซึ่งตรงกับการใช้งานจริง) บน RTX 4060 8 GB
+
+| engine | mean | median | p95 | max | exact match |
+|---|---|---|---|---|---|
+| qwen3:4b `--think on` | 24,542 ms | 21,179 | 40,096 | 42,686 | 84.6% |
+| qwen3:4b `--think off` | 2,049 ms | 1,813 | 2,779 | 4,393 | 84.6% |
+| OpenThai-SystemOne | **442 ms** | 437 | 475 | 523 | 76.9% |
+
+ASR ~520–570 ms ทุกกรณี ความแม่นของ qwen เท่ากันทั้งเปิดและปิด reasoning
+ดังนั้น `--think on` คือการจ่ายเวลาเพิ่ม 12 เท่าโดยไม่ได้อะไรกลับมา
 
 ผลดิบทุกครั้งถูกเก็บเป็น JSON ใน `evaluation/results/` (มี prompt, transcript และคำตอบดิบ
 ของโมเดลครบ เอาไปใส่ appendix หรือวิเคราะห์ย้อนหลังได้)

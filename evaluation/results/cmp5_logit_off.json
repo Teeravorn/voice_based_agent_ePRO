@@ -1,0 +1,688 @@
+{
+  "timestamp": "20261015_231823",
+  "form": {
+    "form_id": "quickdash_th",
+    "version": "1.0.0"
+  },
+  "engine": "logit",
+  "llm_model": "qwen3.5:4b",
+  "decision": null,
+  "asr_model": "typhoon-ai/typhoon-whisper-turbo",
+  "mode": "asr",
+  "warm_up_ms": 418.4,
+  "summaries": {
+    "asr": {
+      "mode": "asr",
+      "n": 15,
+      "scorable": 13,
+      "exact": 9,
+      "within_one": 1.0,
+      "undecided": 0,
+      "meta_total": 2,
+      "meta_correct": 2,
+      "errors": 0,
+      "by_type": {
+        "direct": [
+          3,
+          3
+        ],
+        "natural": [
+          4,
+          7
+        ],
+        "ambiguous": [
+          2,
+          3
+        ]
+      },
+      "exact_match": 0.6923,
+      "undecided_rate": 0.0,
+      "meta_accuracy": 1.0,
+      "llm_latency_ms": {
+        "mean": 154.8,
+        "median": 132.4,
+        "p95": 267.2,
+        "max": 278.5
+      },
+      "asr_latency_ms": {
+        "mean": 468.5,
+        "median": 458.5,
+        "p95": 580.3,
+        "max": 622.3
+      }
+    }
+  },
+  "records": [
+    {
+      "audio": "q1_direct_1.wav",
+      "item_id": "q1",
+      "answer_type": "direct",
+      "mode": "asr",
+      "script_th": "ไม่ยากเลยค่ะ เปิดได้ปกติ",
+      "transcript": "ไม่ยากเลยครับ เปิดได้ปกติ",
+      "gold_value": "1",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 350.2,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่ยาก",
+        "confidence": 0.9989930181562549,
+        "meta_intent": null,
+        "reason_th": "p(ไม่ยาก)=1.00",
+        "latency_ms": 145.8,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "1": 0.999,
+            "0": 0.0006,
+            "2": 0.0003,
+            "5": 0.0001,
+            "3": 0.0,
+            "4": 0.0
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "1",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q1_natural_1.wav",
+      "item_id": "q1",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ต้องให้ลูกเปิดให้ทุกครั้งเลยค่ะ เปิดเองไม่ไหว",
+      "transcript": "ต้องให้ลูกเปิดให้ทุกครั้งเลยครับ เปิดเองไม่ไหว",
+      "gold_value": "5",
+      "gold_meta": null,
+      "predicted": 5,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 496.1,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 5,
+        "label": "ทำไม่ได้เลย",
+        "confidence": 0.671794486308095,
+        "meta_intent": null,
+        "reason_th": "p(ทำไม่ได้เลย)=0.67",
+        "latency_ms": 137.2,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "5": 0.6718,
+            "4": 0.3215,
+            "0": 0.0041,
+            "1": 0.002,
+            "3": 0.0004,
+            "2": 0.0002
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "5",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q1_natural_2.wav",
+      "item_id": "q1",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "เปิดได้อยู่นะ แต่ต้องออกแรงเยอะกว่าเดิม แล้วก็ช้าลง",
+      "transcript": "เปิดได้อยู่นะ แต่ต้องออกแรงเยอะกว่าเดิม แล้วก็ช้าลง",
+      "gold_value": "3",
+      "gold_meta": null,
+      "predicted": 3,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 622.3,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 3,
+        "label": "ยากปานกลาง",
+        "confidence": 0.9664784654557265,
+        "meta_intent": null,
+        "reason_th": "p(ยากปานกลาง)=0.97",
+        "latency_ms": 129.8,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "3": 0.9665,
+            "4": 0.0152,
+            "2": 0.014,
+            "1": 0.0022,
+            "5": 0.0021,
+            "0": 0.0001
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "3",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q1_ambiguous_1.wav",
+      "item_id": "q1",
+      "answer_type": "ambiguous",
+      "mode": "asr",
+      "script_th": "ก็พอได้อยู่ค่ะ แต่ไม่เหมือนเมื่อก่อน",
+      "transcript": "ก็พอได้อยู่ครับ แต่ไม่เหมือนเมื่อก่อน",
+      "gold_value": "2|3",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 431.4,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่ยาก",
+        "confidence": 0.6148438075825852,
+        "meta_intent": null,
+        "reason_th": "p(ไม่ยาก)=0.61",
+        "latency_ms": 128.2,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "1": 0.6148,
+            "2": 0.2244,
+            "3": 0.1292,
+            "4": 0.0183,
+            "5": 0.008,
+            "0": 0.0052
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "1",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q1_meta_1.wav",
+      "item_id": "q1",
+      "answer_type": "meta",
+      "mode": "asr",
+      "script_th": "เมื่อกี้ถามว่าอะไรนะคะ ฟังไม่ทัน",
+      "transcript": "เมื่อกี้ถามว่าอะไรนะครับ ฟังไม่ทัน",
+      "gold_value": "0",
+      "gold_meta": "repeat",
+      "predicted": null,
+      "correct": true,
+      "distance": null,
+      "meta_correct": true,
+      "asr_latency_ms": 458.2,
+      "skipped_reason": null,
+      "extraction": {
+        "value": null,
+        "label": null,
+        "confidence": 0.9954122239084084,
+        "meta_intent": "repeat",
+        "reason_th": "p(แปลงเป็นคะแนนไม่ได้)=1.00",
+        "latency_ms": 278.5,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "0": 0.9954,
+            "5": 0.0029,
+            "1": 0.0014,
+            "4": 0.0001,
+            "2": 0.0001,
+            "3": 0.0
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "0",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b",
+          "meta": {
+            "probabilities": {
+              "repeat": 0.9961,
+              "dont_know": 0.0022,
+              "need_help": 0.001,
+              "out_of_scope": 0.0007
+            }
+          }
+        }
+      }
+    },
+    {
+      "audio": "q9_direct_1.wav",
+      "item_id": "q9",
+      "answer_type": "direct",
+      "mode": "asr",
+      "script_th": "ไม่ปวดแล้วค่ะ หายดีแล้ว",
+      "transcript": "ไม่ปวดแล้วครับ หายดีแล้ว",
+      "gold_value": "1",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 362.4,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่มี",
+        "confidence": 0.8362905413662343,
+        "meta_intent": null,
+        "reason_th": "p(ไม่มี)=0.84",
+        "latency_ms": 165.4,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "1": 0.8363,
+            "0": 0.159,
+            "5": 0.0036,
+            "2": 0.0009,
+            "3": 0.0001,
+            "4": 0.0001
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "1",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q9_natural_1.wav",
+      "item_id": "q9",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ปวดนิดหน่อยตอนยกของหนัก นอกนั้นก็ปกติ",
+      "transcript": "ปวดนิดหน่อยตอนยกของหนักนอกนั้นก็ปกติ",
+      "gold_value": "2",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 458.5,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "เล็กน้อย",
+        "confidence": 0.9630683776884282,
+        "meta_intent": null,
+        "reason_th": "p(เล็กน้อย)=0.96",
+        "latency_ms": 130.3,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "2": 0.9631,
+            "3": 0.0266,
+            "1": 0.0097,
+            "4": 0.0004,
+            "5": 0.0001,
+            "0": 0.0001
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "2",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q9_natural_2.wav",
+      "item_id": "q9",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ปวดจนต้องกินยาแก้ปวดเกือบทุกวัน",
+      "transcript": "ปวดจนต้องกินยาแก้ปวดเกือบทุกวัน",
+      "gold_value": "4",
+      "gold_meta": null,
+      "predicted": 4,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 462.1,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 4,
+        "label": "รุนแรง",
+        "confidence": 0.5095018918788221,
+        "meta_intent": null,
+        "reason_th": "p(รุนแรง)=0.51",
+        "latency_ms": 130.3,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "4": 0.5095,
+            "5": 0.4636,
+            "3": 0.023,
+            "2": 0.0021,
+            "1": 0.0016,
+            "0": 0.0002
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "4",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q9_natural_3.wav",
+      "item_id": "q9",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ปวดตลอดเวลาเลยค่ะ กินยาก็ไม่ค่อยดีขึ้น",
+      "transcript": "ปวดตลอดเวลาเลยครับ กินยาก็ไม่ค่อยดีขึ้น",
+      "gold_value": "5",
+      "gold_meta": null,
+      "predicted": 4,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 488.7,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 4,
+        "label": "รุนแรง",
+        "confidence": 0.5625285343174412,
+        "meta_intent": null,
+        "reason_th": "p(รุนแรง)=0.56",
+        "latency_ms": 126.3,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "4": 0.5625,
+            "5": 0.3793,
+            "3": 0.0536,
+            "2": 0.0026,
+            "1": 0.0018,
+            "0": 0.0002
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "4",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q9_ambiguous_1.wav",
+      "item_id": "q9",
+      "answer_type": "ambiguous",
+      "mode": "asr",
+      "script_th": "ก็ไม่ได้ปวดมากเท่าเมื่อก่อนแล้ว แต่ก็ยังมีอยู่บ้าง",
+      "transcript": "ก็ไม่ได้ปวดมากเท่าเมื่อก่อนแล้วแต่ก็ยังมีอยู่บ้าง",
+      "gold_value": "2|3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 558.7,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "เล็กน้อย",
+        "confidence": 0.5960944099049293,
+        "meta_intent": null,
+        "reason_th": "p(เล็กน้อย)=0.60",
+        "latency_ms": 132.4,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "2": 0.5961,
+            "3": 0.391,
+            "4": 0.0082,
+            "1": 0.0025,
+            "5": 0.0016,
+            "0": 0.0005
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "2",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q11_direct_1.wav",
+      "item_id": "q11",
+      "answer_type": "direct",
+      "mode": "asr",
+      "script_th": "นอนหลับได้ปกติดีค่ะ",
+      "transcript": "นอนหลับได้ปกติดีครับ",
+      "gold_value": "1",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 344.5,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่ยาก",
+        "confidence": 0.9938039883660618,
+        "meta_intent": null,
+        "reason_th": "p(ไม่ยาก)=0.99",
+        "latency_ms": 155.6,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "1": 0.9938,
+            "0": 0.0059,
+            "2": 0.0002,
+            "5": 0.0001,
+            "4": 0.0,
+            "3": 0.0
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "1",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q11_natural_1.wav",
+      "item_id": "q11",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "บางคืนก็ปวดจนพลิกตัวลำบาก แต่ก็ยังพอหลับได้",
+      "transcript": "บางคืนก็ปวดจนพลิกตัวลำบากแต่ก็ยังพอหลับได้",
+      "gold_value": "3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 554.9,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "ยากเล็กน้อย",
+        "confidence": 0.43484124650808287,
+        "meta_intent": null,
+        "reason_th": "p(ยากเล็กน้อย)=0.43",
+        "latency_ms": 132.8,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "2": 0.4348,
+            "3": 0.3599,
+            "4": 0.1398,
+            "1": 0.0396,
+            "5": 0.0255,
+            "0": 0.0004
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "2",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q11_natural_2.wav",
+      "item_id": "q11",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ตื่นกลางดึกเพราะปวดเกือบทุกคืน กว่าจะหลับต่อได้นาน",
+      "transcript": "ตื่นกลางดึกเพราะปวดเกือบทุกคืนกว่าจะหลับต่อได้นาน",
+      "gold_value": "4",
+      "gold_meta": null,
+      "predicted": 3,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 580.3,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 3,
+        "label": "ยากปานกลาง",
+        "confidence": 0.7115123052875916,
+        "meta_intent": null,
+        "reason_th": "p(ยากปานกลาง)=0.71",
+        "latency_ms": 132.2,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "3": 0.7115,
+            "4": 0.2434,
+            "5": 0.0406,
+            "2": 0.004,
+            "1": 0.0004,
+            "0": 0.0001
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "3",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q11_ambiguous_1.wav",
+      "item_id": "q11",
+      "answer_type": "ambiguous",
+      "mode": "asr",
+      "script_th": "ก็หลับ ๆ ตื่น ๆ ค่ะ",
+      "transcript": "ก็หลับ หลับตื่น ตื่นครับ",
+      "gold_value": "2|3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 405.7,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "ยากเล็กน้อย",
+        "confidence": 0.43193096256852476,
+        "meta_intent": null,
+        "reason_th": "p(ยากเล็กน้อย)=0.43",
+        "latency_ms": 130.6,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "2": 0.4319,
+            "3": 0.3155,
+            "1": 0.1008,
+            "4": 0.0815,
+            "5": 0.056,
+            "0": 0.0142
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "2",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b"
+        }
+      }
+    },
+    {
+      "audio": "q11_meta_1.wav",
+      "item_id": "q11",
+      "answer_type": "meta",
+      "mode": "asr",
+      "script_th": "จำไม่ได้ค่ะ ไม่แน่ใจเหมือนกัน",
+      "transcript": "จำไม่ได้ครับ ไม่แน่ใจเหมือนกัน",
+      "gold_value": "0",
+      "gold_meta": "dont_know",
+      "predicted": null,
+      "correct": true,
+      "distance": null,
+      "meta_correct": true,
+      "asr_latency_ms": 453.0,
+      "skipped_reason": null,
+      "extraction": {
+        "value": null,
+        "label": null,
+        "confidence": 0.9742464907293334,
+        "meta_intent": "dont_know",
+        "reason_th": "p(แปลงเป็นคะแนนไม่ได้)=0.97",
+        "latency_ms": 267.2,
+        "error": null,
+        "raw": {
+          "probabilities": {
+            "0": 0.9742,
+            "5": 0.0205,
+            "1": 0.0043,
+            "4": 0.0004,
+            "3": 0.0002,
+            "2": 0.0002
+          },
+          "missing_from_top_logprobs": [],
+          "token_ที่โมเดลเลือกเอง": "0",
+          "answer_position": 0,
+          "eval_count": 1,
+          "think": false,
+          "model": "qwen3.5:4b",
+          "meta": {
+            "probabilities": {
+              "dont_know": 0.999,
+              "repeat": 0.0007,
+              "need_help": 0.0002,
+              "out_of_scope": 0.0001
+            }
+          }
+        }
+      }
+    }
+  ]
+}

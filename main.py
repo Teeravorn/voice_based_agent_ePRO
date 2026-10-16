@@ -47,7 +47,22 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--mode", choices=["text", "asr", "both"], default="text",
                         help="text = ข้าม ASR, asr = ถอดเสียงจริง, both = รันทั้งสองแล้วเทียบกัน")
-    parser.add_argument("--model", default="qwen3:4b", help="ชื่อโมเดลใน ollama")
+    parser.add_argument("--engine", choices=["ollama", "logit", "systemone"], default="ollama",
+                        help="ollama = qwen แบบ generative เขียน JSON, "
+                             "logit = qwen แบบ decision model อ่าน logit ของตัวเลือกมาทำ softmax, "
+                             "systemone = OpenThai-SystemOne decision head")
+    parser.add_argument("--model", default=None,
+                        help="ชื่อโมเดล (ollama: qwen3:4b, systemone: iapp/OpenThai-SystemOne)")
+    parser.add_argument("--think", choices=["off", "on", "low", "medium", "high"], default=None,
+                        help="เฉพาะ ollama: off = ปิด reasoning ซึ่งเร็วกว่ามากในโหมด JSON "
+                             "โดยความแม่นเท่ากัน (ดู docstring ของ ChatEngine.chat_json) "
+                             "ไม่ระบุ = ใช้ค่าตั้งต้นของ ChatEngine")
+    parser.add_argument("--num-ctx", type=int, default=None,
+                        help="เฉพาะ ollama/logit: context window ค่าตั้งต้น 4096 ซึ่งไม่พอเมื่อเปิด "
+                             "thinking (reasoning กิน context หมดก่อนเขียนคำตอบ) ใช้ 16384 ขึ้นไป")
+    parser.add_argument("--decision", choices=["expected", "argmax"], default="expected",
+                        help="เฉพาะ systemone: แปลง distribution เป็นคะแนนเดียวด้วยวิธีไหน "
+                             "(expected วัดแล้วดีกว่า argmax ชัดเจน ดู docstring ของ SystemOneExtractor)")
     parser.add_argument("--form", type=Path, default=DEFAULT_FORM)
     parser.add_argument("--manifest", type=Path, default=DEFAULT_MANIFEST)
     parser.add_argument("--audio-dir", type=Path, default=DEFAULT_AUDIO_DIR)
@@ -59,6 +74,17 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     return parser.parse_args(argv)
 
 
+def build_engine_kwargs(args) -> dict:
+    """แปลง flag ของ CLI เป็นพารามิเตอร์ของ ChatEngine"""
+    kwargs = {}
+    if args.think is not None:
+        # "off"/"on" -> bool ส่วน low/medium/high ส่งเป็นสตริงตามที่ Ollama รับ
+        kwargs["think"] = {"off": False, "on": True}.get(args.think, args.think)
+    if args.num_ctx is not None:
+        kwargs["num_ctx"] = args.num_ctx
+    return kwargs
+
+
 def select_rows(rows: list[ManifestRow], only: list[str] | None, limit: int | None) -> list[ManifestRow]:
     if only:
         wanted = {item_id.strip() for item_id in only}
@@ -66,6 +92,23 @@ def select_rows(rows: list[ManifestRow], only: list[str] | None, limit: int | No
     if limit is not None:
         rows = rows[:limit]
     return rows
+
+
+def warm_up_extractor(rows: list[ManifestRow], extractor) -> float:
+    """ยิง extractor ทิ้งหนึ่งครั้งก่อนเริ่มจับเวลา
+
+    การเรียกครั้งแรกสุดแพงกว่าครั้งต่อ ๆ ไปหลายเท่า (วัดกับ qwen3.5:4b ได้ 8.9 วินาที
+    เทียบกับค่ากลาง 1.6 วินาที) เพราะโมเดลต้องถูกโหลดเข้า VRAM และ compile kernel
+    ถ้าไม่ตัดออก ค่า mean จะถูกดึงขึ้นจนรายงานผิด และยังพบว่าการเรียกครั้งแรกบางทีให้
+    ผลลัพธ์ต่างจากครั้งถัด ๆ ไปแม้ตั้ง temperature=0 กับ seed คงที่
+
+    คืนเวลาที่ใช้ warm up เพื่อรายงานแยก ไม่เอาไปรวมในสถิติ
+    """
+    if not rows:
+        return 0.0
+    print("warm up extractor ...", flush=True)
+    result = extractor.extract(rows[0].script_th, rows[0].item_id)
+    return result.latency_ms
 
 
 def run_text_mode(rows: list[ManifestRow], extractor: OptionExtractor) -> list[RunRecord]:
@@ -151,16 +194,38 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"manifest ผิด: {row.audio} เฉลย {gold} ไม่อยู่ใน scale {scale.id} ของ {row.item_id}")
                 return 1
 
-    engine = ChatEngine(model=args.model)
-    if not engine.health():
-        print("เรียก Ollama ไม่ได้ ตรวจว่า server รันอยู่หรือยัง (ollama serve) แล้วลองใหม่")
-        return 1
+    if args.engine == "logit":
+        from extractor.logit_extractor import LogitExtractor
 
-    extractor = OptionExtractor(engine=engine, form=form)
+        model_name = args.model or "qwen3.5:4b"
+        engine = ChatEngine(model=model_name, **build_engine_kwargs(args))
+        if not engine.health():
+            print("เรียก Ollama ไม่ได้ ตรวจว่า server รันอยู่หรือยัง (ollama serve) แล้วลองใหม่")
+            return 1
+        extractor = LogitExtractor(engine=engine, form=form)
+        model_label = f"{model_name} (logit, think={engine.think})"
+    elif args.engine == "systemone":
+        from extractor.systemone_extractor import MODEL_ID, SystemOneExtractor
+
+        model_name = args.model or MODEL_ID
+        print(f"กำลังโหลด {model_name} ...")
+        extractor = SystemOneExtractor(form=form, model_path=model_name, decision=args.decision)
+        model_label = f"{model_name} (decision={args.decision})"
+    else:
+        model_name = args.model or "qwen3:4b"
+        engine = ChatEngine(model=model_name, **build_engine_kwargs(args))
+        if not engine.health():
+            print("เรียก Ollama ไม่ได้ ตรวจว่า server รันอยู่หรือยัง (ollama serve) แล้วลองใหม่")
+            return 1
+        extractor = OptionExtractor(engine=engine, form=form)
+        model_label = f"{model_name} (think={engine.think})"
 
     print(f"ฟอร์ม   : {form.title_th} ({form.form_id} v{form.version})")
-    print(f"โมเดล   : {args.model}")
+    print(f"โมเดล   : {model_label}")
     print(f"จำนวน   : {len(rows)} คำตอบ จาก {len({row.item_id for row in rows})} คำถาม")
+
+    warm_up_ms = warm_up_extractor(rows, extractor)
+    print(f"warm up : {warm_up_ms:.0f} ms (ไม่นับรวมในสถิติ)")
 
     text_records = asr_records = None
     text_summary = asr_summary = None
@@ -190,9 +255,13 @@ def main(argv: list[str] | None = None) -> int:
         {
             "timestamp": timestamp,
             "form": {"form_id": form.form_id, "version": form.version},
-            "llm_model": args.model,
+            "engine": args.engine,
+            "llm_model": model_name,
+            "decision": args.decision if args.engine == "systemone" else None,
             "asr_model": args.asr_model if args.mode in ("asr", "both") else None,
             "mode": args.mode,
+            "warm_up_ms": round(warm_up_ms, 1),
+            "num_ctx": args.num_ctx,
             "summaries": {
                 name: summary.as_dict()
                 for name, summary in (("text", text_summary), ("asr", asr_summary))

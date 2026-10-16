@@ -9,7 +9,6 @@
 import json
 import time
 from dataclasses import dataclass, field
-from urllib import response
 
 import ollama
 from ollama import ChatResponse, chat
@@ -29,6 +28,21 @@ class LLMResponse:
     latency_ms: float
     model: str
     raw: dict = field(default_factory=dict)
+
+
+@dataclass
+class LogprobResponse:
+    """ผลลัพธ์พร้อม logprob ของทุก token ที่โมเดลสร้าง
+
+    ``entries`` หนึ่งตัวต่อหนึ่ง token ที่ถูกสร้าง แต่ละตัวมี ``token`` ที่เลือกจริง
+    และ ``top_logprobs`` คือ token ที่มีโอกาสสูงสุด 20 อันดับแรก ณ ตำแหน่งนั้น
+    """
+
+    text: str
+    entries: list[dict]
+    latency_ms: float
+    model: str
+    eval_count: int | None = None
 
 
 class LLMUnavailable(RuntimeError):
@@ -117,6 +131,54 @@ class ChatEngine:
             raw={"eval_count": getattr(response, "eval_count", None)},
         )
 
+    def chat_logprobs(
+        self,
+        messages: list[dict[str, str]],
+        *,
+        num_predict: int | None = None,
+        top_logprobs: int = 20,
+    ) -> LogprobResponse:
+        """เรียก LLM แล้วขอ logprob ของทุกตำแหน่งที่สร้าง token
+
+        ใช้สำหรับโหมด decision model: ให้โมเดลตอบเป็นตัวเลขตัวเดียว แล้วอ่าน logprob
+        ของตัวเลือกทุกตัวที่ตำแหน่งนั้นมาทำ softmax เอง แทนที่จะเชื่อ token ที่มันเลือก
+
+        ``top_logprobs`` ของ Ollama จำกัดไว้ที่ 20 (ขอมากกว่านั้นจะถูกปฏิเสธ)
+        ซึ่งพอสำหรับสเกล 5-6 ระดับ แต่ถ้าตัวเลือกไหนหลุดจาก 20 อันดับแรก
+        จะไม่มี logprob กลับมา ผู้เรียกต้องจัดการกรณีนั้นเอง
+        """
+        started = time.perf_counter()
+        options = dict(self.options)
+        if num_predict is not None:
+            options["num_predict"] = num_predict
+
+        try:
+            response: ChatResponse = chat(
+                model=self.model,
+                messages=messages,
+                options=options,
+                think=self.think,
+                stream=False,
+                logprobs=True,
+                top_logprobs=top_logprobs,
+            )
+        except Exception as exc:
+            raise LLMUnavailable(f"เรียก Ollama ไม่สำเร็จ: {exc}") from exc
+
+        entries = []
+        for entry in getattr(response, "logprobs", None) or []:
+            # SDK คืนมาเป็น pydantic model ไม่ใช่ dict ปรับให้เป็น dict ให้ใช้ง่าย
+            dumped = entry.model_dump() if hasattr(entry, "model_dump") else dict(entry)
+            entries.append(dumped)
+
+        return LogprobResponse(
+            text=response.message.content or "",
+            entries=entries,
+            latency_ms=(time.perf_counter() - started) * 1000,
+            model=self.model,
+            eval_count=getattr(response, "eval_count", None),
+        )
+
     def chat(self, message: str, stream: bool = False) -> str:
         """คุยแบบข้อความธรรมดา (ใช้ตอน debug / ลองโมเดล ไม่ได้ใช้ใน pipeline)
 
@@ -143,7 +205,6 @@ class ChatEngine:
             messages=[{"role": "user", "content": message}],
             options=self.options,
             stream=True,
-            **self._free_text_think,
         ):
             piece = chunk.message.content or ""
             pieces.append(piece)

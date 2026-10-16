@@ -1,0 +1,821 @@
+{
+  "timestamp": "20260926_113041",
+  "form": {
+    "form_id": "quickdash_th",
+    "version": "1.0.0"
+  },
+  "engine": "systemone",
+  "llm_model": "iapp/OpenThai-SystemOne",
+  "decision": "expected",
+  "asr_model": "typhoon-ai/typhoon-whisper-turbo",
+  "mode": "asr",
+  "summaries": {
+    "asr": {
+      "mode": "asr",
+      "n": 15,
+      "scorable": 13,
+      "exact": 10,
+      "within_one": 1.0,
+      "undecided": 0,
+      "meta_total": 2,
+      "meta_correct": 2,
+      "errors": 0,
+      "by_type": {
+        "direct": [
+          3,
+          3
+        ],
+        "natural": [
+          4,
+          7
+        ],
+        "ambiguous": [
+          3,
+          3
+        ]
+      },
+      "exact_match": 0.7692,
+      "undecided_rate": 0.0,
+      "meta_accuracy": 1.0,
+      "llm_latency_ms": {
+        "mean": 442.1,
+        "median": 437.2,
+        "p95": 475.4,
+        "max": 523.3
+      },
+      "asr_latency_ms": {
+        "mean": 563.7,
+        "median": 590.6,
+        "p95": 709.3,
+        "max": 743.0
+      }
+    }
+  },
+  "records": [
+    {
+      "audio": "q1_direct_1.wav",
+      "item_id": "q1",
+      "answer_type": "direct",
+      "mode": "asr",
+      "script_th": "ไม่ยากเลยค่ะ เปิดได้ปกติ",
+      "transcript": "ไม่ยากเลยครับ เปิดได้ปกติ",
+      "gold_value": "1",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 380.0,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่ยาก",
+        "confidence": 0.9934283494949341,
+        "meta_intent": null,
+        "reason_th": "p(ไม่ยาก)=0.99",
+        "latency_ms": 523.3,
+        "error": null,
+        "raw": {
+          "score_expected": 0.010788439773023129,
+          "level_argmax": 0,
+          "level_expected": 0,
+          "value_argmax": 1,
+          "value_expected": 1,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.9934,
+            "1": 0.004,
+            "2": 0.0015,
+            "3": 0.0004,
+            "4": 0.0006
+          },
+          "head_confidence": 0.9711735105507038,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9883,
+            "repeat": 0.0054,
+            "dont_know": 0.0044,
+            "need_help": 0.0009,
+            "out_of_scope": 0.001
+          },
+          "meta_abstain": 0.0014564426383003592,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q1_natural_1.wav",
+      "item_id": "q1",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ต้องให้ลูกเปิดให้ทุกครั้งเลยค่ะ เปิดเองไม่ไหว",
+      "transcript": "ต้องให้ลูกเปิดให้ทุกครั้งเลยครับ เปิดเองไม่ไหว",
+      "gold_value": "5",
+      "gold_meta": null,
+      "predicted": 5,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 576.9,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 5,
+        "label": "ทำไม่ได้เลย",
+        "confidence": 0.8044639229774475,
+        "meta_intent": null,
+        "reason_th": "p(ทำไม่ได้เลย)=0.80",
+        "latency_ms": 427.9,
+        "error": null,
+        "raw": {
+          "score_expected": 3.608501434326172,
+          "level_argmax": 4,
+          "level_expected": 4,
+          "value_argmax": 5,
+          "value_expected": 5,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0188,
+            "1": 0.0278,
+            "2": 0.0838,
+            "3": 0.0651,
+            "4": 0.8045
+          },
+          "head_confidence": 0.5432866683095008,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.8403,
+            "repeat": 0.0226,
+            "dont_know": 0.118,
+            "need_help": 0.0147,
+            "out_of_scope": 0.0044
+          },
+          "meta_abstain": 0.01858546957373619,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q1_natural_2.wav",
+      "item_id": "q1",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "เปิดได้อยู่นะ แต่ต้องออกแรงเยอะกว่าเดิม แล้วก็ช้าลง",
+      "transcript": "เปิดได้อยู่นะ แต่ต้องออกแรงเยอะกว่าเดิม แล้วก็ช้าลง",
+      "gold_value": "3",
+      "gold_meta": null,
+      "predicted": 3,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 743.0,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 3,
+        "label": "ยากปานกลาง",
+        "confidence": 0.9743949174880981,
+        "meta_intent": null,
+        "reason_th": "p(ยากปานกลาง)=0.97",
+        "latency_ms": 393.9,
+        "error": null,
+        "raw": {
+          "score_expected": 1.9801348447799683,
+          "level_argmax": 2,
+          "level_expected": 2,
+          "value_argmax": 3,
+          "value_expected": 3,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0016,
+            "1": 0.0208,
+            "2": 0.9744,
+            "3": 0.0023,
+            "4": 0.0009
+          },
+          "head_confidence": 0.9151723559924444,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9255,
+            "repeat": 0.0152,
+            "dont_know": 0.0475,
+            "need_help": 0.0092,
+            "out_of_scope": 0.0027
+          },
+          "meta_abstain": 0.2088172733783722,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q1_ambiguous_1.wav",
+      "item_id": "q1",
+      "answer_type": "ambiguous",
+      "mode": "asr",
+      "script_th": "ก็พอได้อยู่ค่ะ แต่ไม่เหมือนเมื่อก่อน",
+      "transcript": "ก็พอได้อยู่ครับ แต่ไม่เหมือนเมื่อก่อน",
+      "gold_value": "2|3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 528.1,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "ยากเล็กน้อย",
+        "confidence": 0.744406521320343,
+        "meta_intent": null,
+        "reason_th": "p(ยากเล็กน้อย)=0.74",
+        "latency_ms": 437.2,
+        "error": null,
+        "raw": {
+          "score_expected": 1.0297002792358398,
+          "level_argmax": 1,
+          "level_expected": 1,
+          "value_argmax": 2,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.1161,
+            "1": 0.7444,
+            "2": 0.1348,
+            "3": 0.0032,
+            "4": 0.0016
+          },
+          "head_confidence": 0.5227384010784581,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.929,
+            "repeat": 0.0322,
+            "dont_know": 0.0324,
+            "need_help": 0.0048,
+            "out_of_scope": 0.0017
+          },
+          "meta_abstain": 0.0062665254808962345,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q1_meta_1.wav",
+      "item_id": "q1",
+      "answer_type": "meta",
+      "mode": "asr",
+      "script_th": "เมื่อกี้ถามว่าอะไรนะคะ ฟังไม่ทัน",
+      "transcript": "เมื่อกี้ถามว่าอะไรนะครับ ฟังไม่ทัน",
+      "gold_value": "0",
+      "gold_meta": "repeat",
+      "predicted": null,
+      "correct": true,
+      "distance": null,
+      "meta_correct": true,
+      "asr_latency_ms": 590.6,
+      "skipped_reason": null,
+      "extraction": {
+        "value": null,
+        "label": null,
+        "confidence": 0.9710838198661804,
+        "meta_intent": "repeat",
+        "reason_th": "ตีความว่าผู้ป่วยไม่ได้ตอบคำถาม (repeat)",
+        "latency_ms": 407.1,
+        "error": null,
+        "raw": {
+          "score_expected": 0.9912241101264954,
+          "level_argmax": 0,
+          "level_expected": 1,
+          "value_argmax": 1,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.3626,
+            "1": 0.3135,
+            "2": 0.3042,
+            "3": 0.0096,
+            "4": 0.0101
+          },
+          "head_confidence": 0.26394767760901194,
+          "meta_choice": "repeat",
+          "meta_probabilities": {
+            "none": 0.0078,
+            "repeat": 0.9711,
+            "dont_know": 0.0177,
+            "need_help": 0.0021,
+            "out_of_scope": 0.0013
+          },
+          "meta_abstain": 0.00040666249697096646,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q9_direct_1.wav",
+      "item_id": "q9",
+      "answer_type": "direct",
+      "mode": "asr",
+      "script_th": "ไม่ปวดแล้วค่ะ หายดีแล้ว",
+      "transcript": "ไม่ปวดแล้วครับ หายดีแล้ว",
+      "gold_value": "1",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 394.6,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่มี",
+        "confidence": 0.9719863533973694,
+        "meta_intent": null,
+        "reason_th": "p(ไม่มี)=0.97",
+        "latency_ms": 434.6,
+        "error": null,
+        "raw": {
+          "score_expected": 0.03535320609807968,
+          "level_argmax": 0,
+          "level_expected": 0,
+          "value_argmax": 1,
+          "value_expected": 1,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.972,
+            "1": 0.0229,
+            "2": 0.0037,
+            "3": 0.0005,
+            "4": 0.0009
+          },
+          "head_confidence": 0.9099350369337827,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9864,
+            "repeat": 0.0072,
+            "dont_know": 0.003,
+            "need_help": 0.001,
+            "out_of_scope": 0.0024
+          },
+          "meta_abstain": 0.002199362264946103,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q9_natural_1.wav",
+      "item_id": "q9",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ปวดนิดหน่อยตอนยกของหนัก นอกนั้นก็ปกติ",
+      "transcript": "ปวดนิดหน่อยตอนยกของหนักนอกนั้นก็ปกติ",
+      "gold_value": "2",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 660.1,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "เล็กน้อย",
+        "confidence": 0.8452914953231812,
+        "meta_intent": null,
+        "reason_th": "p(เล็กน้อย)=0.85",
+        "latency_ms": 423.4,
+        "error": null,
+        "raw": {
+          "score_expected": 1.1475193500518799,
+          "level_argmax": 1,
+          "level_expected": 1,
+          "value_argmax": 2,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0051,
+            "1": 0.8453,
+            "2": 0.1474,
+            "3": 0.0014,
+            "4": 0.0008
+          },
+          "head_confidence": 0.7104610186490079,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9901,
+            "repeat": 0.0053,
+            "dont_know": 0.0026,
+            "need_help": 0.0009,
+            "out_of_scope": 0.0011
+          },
+          "meta_abstain": 0.0009930990636348724,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q9_natural_2.wav",
+      "item_id": "q9",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ปวดจนต้องกินยาแก้ปวดเกือบทุกวัน",
+      "transcript": "ปวดจนต้องกินยาแก้ปวดเกือบทุกวัน",
+      "gold_value": "4",
+      "gold_meta": null,
+      "predicted": 4,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 590.6,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 4,
+        "label": "รุนแรง",
+        "confidence": 0.9665661454200745,
+        "meta_intent": null,
+        "reason_th": "p(รุนแรง)=0.97",
+        "latency_ms": 460.8,
+        "error": null,
+        "raw": {
+          "score_expected": 2.9956207275390625,
+          "level_argmax": 3,
+          "level_expected": 3,
+          "value_argmax": 4,
+          "value_expected": 4,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0026,
+            "1": 0.0031,
+            "2": 0.0091,
+            "3": 0.9666,
+            "4": 0.0187
+          },
+          "head_confidence": 0.8861832158765703,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9802,
+            "repeat": 0.0104,
+            "dont_know": 0.0039,
+            "need_help": 0.002,
+            "out_of_scope": 0.0035
+          },
+          "meta_abstain": 0.004923198837786913,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q9_natural_3.wav",
+      "item_id": "q9",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ปวดตลอดเวลาเลยค่ะ กินยาก็ไม่ค่อยดีขึ้น",
+      "transcript": "ปวดตลอดเวลาเลยครับ กินยาก็ไม่ค่อยดีขึ้น",
+      "gold_value": "5",
+      "gold_meta": null,
+      "predicted": 4,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 620.4,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 4,
+        "label": "รุนแรง",
+        "confidence": 0.9682595133781433,
+        "meta_intent": null,
+        "reason_th": "p(รุนแรง)=0.97",
+        "latency_ms": 418.9,
+        "error": null,
+        "raw": {
+          "score_expected": 2.9915685653686523,
+          "level_argmax": 3,
+          "level_expected": 3,
+          "value_argmax": 4,
+          "value_expected": 4,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0035,
+            "1": 0.0034,
+            "2": 0.008,
+            "3": 0.9683,
+            "4": 0.0168
+          },
+          "head_confidence": 0.8895688866010799,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9819,
+            "repeat": 0.01,
+            "dont_know": 0.0037,
+            "need_help": 0.0019,
+            "out_of_scope": 0.0025
+          },
+          "meta_abstain": 0.003952656872570515,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q9_ambiguous_1.wav",
+      "item_id": "q9",
+      "answer_type": "ambiguous",
+      "mode": "asr",
+      "script_th": "ก็ไม่ได้ปวดมากเท่าเมื่อก่อนแล้ว แต่ก็ยังมีอยู่บ้าง",
+      "transcript": "ก็ไม่ได้ปวดมากเท่าเมื่อก่อนแล้วแต่ก็ยังมีอยู่บ้าง",
+      "gold_value": "2|3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 618.7,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "เล็กน้อย",
+        "confidence": 0.5518568158149719,
+        "meta_intent": null,
+        "reason_th": "p(เล็กน้อย)=0.55",
+        "latency_ms": 475.4,
+        "error": null,
+        "raw": {
+          "score_expected": 1.4445925951004028,
+          "level_argmax": 1,
+          "level_expected": 1,
+          "value_argmax": 2,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0039,
+            "1": 0.5519,
+            "2": 0.4412,
+            "3": 0.0021,
+            "4": 0.001
+          },
+          "head_confidence": 0.5460896575454431,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9878,
+            "repeat": 0.0083,
+            "dont_know": 0.0019,
+            "need_help": 0.001,
+            "out_of_scope": 0.001
+          },
+          "meta_abstain": 0.001293276553042233,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q11_direct_1.wav",
+      "item_id": "q11",
+      "answer_type": "direct",
+      "mode": "asr",
+      "script_th": "นอนหลับได้ปกติดีค่ะ",
+      "transcript": "นอนหลับได้ปกติดีครับ",
+      "gold_value": "1",
+      "gold_meta": null,
+      "predicted": 1,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 396.7,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 1,
+        "label": "ไม่ยาก",
+        "confidence": 0.9898791909217834,
+        "meta_intent": null,
+        "reason_th": "p(ไม่ยาก)=0.99",
+        "latency_ms": 452.8,
+        "error": null,
+        "raw": {
+          "score_expected": 0.013977748341858387,
+          "level_argmax": 0,
+          "level_expected": 0,
+          "value_argmax": 1,
+          "value_expected": 1,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.9899,
+            "1": 0.0078,
+            "2": 0.0014,
+            "3": 0.0004,
+            "4": 0.0006
+          },
+          "head_confidence": 0.9600742448030781,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9886,
+            "repeat": 0.0079,
+            "dont_know": 0.0016,
+            "need_help": 0.0007,
+            "out_of_scope": 0.0012
+          },
+          "meta_abstain": 0.0009627064573578537,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q11_natural_1.wav",
+      "item_id": "q11",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "บางคืนก็ปวดจนพลิกตัวลำบาก แต่ก็ยังพอหลับได้",
+      "transcript": "บางคืนก็ปวดจนพลิกตัวลำบากแต่ก็ยังพอหลับได้",
+      "gold_value": "3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 633.6,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "ยากเล็กน้อย",
+        "confidence": 0.8192040324211121,
+        "meta_intent": null,
+        "reason_th": "p(ยากเล็กน้อย)=0.82",
+        "latency_ms": 466.4,
+        "error": null,
+        "raw": {
+          "score_expected": 1.21730637550354,
+          "level_argmax": 1,
+          "level_expected": 1,
+          "value_argmax": 2,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0042,
+            "1": 0.8192,
+            "2": 0.1356,
+            "3": 0.0372,
+            "4": 0.0038
+          },
+          "head_confidence": 0.6267122436651403,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9664,
+            "repeat": 0.0286,
+            "dont_know": 0.0023,
+            "need_help": 0.0015,
+            "out_of_scope": 0.0011
+          },
+          "meta_abstain": 0.004250910133123398,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q11_natural_2.wav",
+      "item_id": "q11",
+      "answer_type": "natural",
+      "mode": "asr",
+      "script_th": "ตื่นกลางดึกเพราะปวดเกือบทุกคืน กว่าจะหลับต่อได้นาน",
+      "transcript": "ตื่นกลางดึกเพราะปวดเกือบทุกคืนกว่าจะหลับต่อได้นาน",
+      "gold_value": "4",
+      "gold_meta": null,
+      "predicted": 3,
+      "correct": false,
+      "distance": 1,
+      "meta_correct": true,
+      "asr_latency_ms": 709.3,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 3,
+        "label": "ยากปานกลาง",
+        "confidence": 0.5426594018936157,
+        "meta_intent": null,
+        "reason_th": "p(ยากปานกลาง)=0.54",
+        "latency_ms": 456.5,
+        "error": null,
+        "raw": {
+          "score_expected": 2.4459242820739746,
+          "level_argmax": 2,
+          "level_expected": 2,
+          "value_argmax": 3,
+          "value_expected": 3,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.0013,
+            "1": 0.0056,
+            "2": 0.5427,
+            "3": 0.447,
+            "4": 0.0035
+          },
+          "head_confidence": 0.5345787585369258,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9546,
+            "repeat": 0.0338,
+            "dont_know": 0.0063,
+            "need_help": 0.0033,
+            "out_of_scope": 0.002
+          },
+          "meta_abstain": 0.013409430161118507,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q11_ambiguous_1.wav",
+      "item_id": "q11",
+      "answer_type": "ambiguous",
+      "mode": "asr",
+      "script_th": "ก็หลับ ๆ ตื่น ๆ ค่ะ",
+      "transcript": "ก็หลับ หลับตื่น ตื่นครับ",
+      "gold_value": "2|3",
+      "gold_meta": null,
+      "predicted": 2,
+      "correct": true,
+      "distance": 0,
+      "meta_correct": true,
+      "asr_latency_ms": 460.2,
+      "skipped_reason": null,
+      "extraction": {
+        "value": 2,
+        "label": "ยากเล็กน้อย",
+        "confidence": 0.6215795874595642,
+        "meta_intent": null,
+        "reason_th": "p(ยากเล็กน้อย)=0.62",
+        "latency_ms": 439.0,
+        "error": null,
+        "raw": {
+          "score_expected": 0.968303918838501,
+          "level_argmax": 1,
+          "level_expected": 1,
+          "value_argmax": 2,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.2138,
+            "1": 0.6216,
+            "2": 0.1494,
+            "3": 0.0128,
+            "4": 0.0023
+          },
+          "head_confidence": 0.3913925831021562,
+          "meta_choice": "none",
+          "meta_probabilities": {
+            "none": 0.9771,
+            "repeat": 0.0171,
+            "dont_know": 0.003,
+            "need_help": 0.0014,
+            "out_of_scope": 0.0015
+          },
+          "meta_abstain": 0.001597080146893859,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    },
+    {
+      "audio": "q11_meta_1.wav",
+      "item_id": "q11",
+      "answer_type": "meta",
+      "mode": "asr",
+      "script_th": "จำไม่ได้ค่ะ ไม่แน่ใจเหมือนกัน",
+      "transcript": "จำไม่ได้ครับ ไม่แน่ใจเหมือนกัน",
+      "gold_value": "0",
+      "gold_meta": "dont_know",
+      "predicted": null,
+      "correct": true,
+      "distance": null,
+      "meta_correct": true,
+      "asr_latency_ms": 552.4,
+      "skipped_reason": null,
+      "extraction": {
+        "value": null,
+        "label": null,
+        "confidence": 0.9671846628189087,
+        "meta_intent": "dont_know",
+        "reason_th": "ตีความว่าผู้ป่วยไม่ได้ตอบคำถาม (dont_know)",
+        "latency_ms": 414.1,
+        "error": null,
+        "raw": {
+          "score_expected": 1.1198500394821167,
+          "level_argmax": 1,
+          "level_expected": 1,
+          "value_argmax": 2,
+          "value_expected": 2,
+          "decision": "expected",
+          "probabilities": {
+            "0": 0.2579,
+            "1": 0.4365,
+            "2": 0.2421,
+            "3": 0.055,
+            "4": 0.0085
+          },
+          "head_confidence": 0.22021540147842777,
+          "meta_choice": "dont_know",
+          "meta_probabilities": {
+            "none": 0.0216,
+            "repeat": 0.007,
+            "dont_know": 0.9672,
+            "need_help": 0.0029,
+            "out_of_scope": 0.0013
+          },
+          "meta_abstain": 0.00047668369370512664,
+          "model": "iapp/OpenThai-SystemOne"
+        }
+      }
+    }
+  ]
+}

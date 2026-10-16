@@ -283,7 +283,10 @@ def test_chat_json_passes_think_false(monkeypatch):
 
 def test_chat_omits_think_false_in_free_text_mode(monkeypatch):
     """โหมดข้อความธรรมดาห้ามส่ง think=False ไม่งั้น reasoning จะไหลลงไปปนใน content
-    ดู docstring ของ ChatEngine._free_text_think"""
+
+    วัดกับ qwen3:4b: think=False ได้ content 2167 ตัวอักษรที่เป็น reasoning ล้วน
+    ส่วนการไม่ส่ง think ได้ content 6 ตัวอักษร และ reasoning 2151 ตัวอักษรแยกออกมา
+    """
     from engine import ChatEngine
 
     captured = _capture_ollama_call(monkeypatch)
@@ -296,10 +299,15 @@ def test_chat_omits_think_false_in_free_text_mode(monkeypatch):
     assert engine.last_thinking == "เหตุผลที่โมเดลคิดไว้"
 
 
-def test_chat_forwards_explicit_think_level(monkeypatch):
+def test_chat_never_sends_think_in_free_text_mode(monkeypatch):
+    """โหมดข้อความธรรมดาไม่ส่ง think เลย ปล่อยให้ Ollama แยก reasoning ตามค่าตั้งต้น
+
+    เพราะ think=False ที่นี่ไม่ได้ปิดการคิด แค่ปิดการแยก reasoning ออกจาก content
+    (ดู test ด้านบน) จึงไม่มีค่าไหนของ think ที่ควรส่งในโหมดนี้
+    """
     from engine import ChatEngine
 
-    captured = _capture_ollama_call(monkeypatch)
-    ChatEngine(model="qwen3:4b", think="low").chat("สวัสดี")
-
-    assert captured["think"] == "low"
+    for think in (False, True, "low", None):
+        captured = _capture_ollama_call(monkeypatch)
+        ChatEngine(model="qwen3:4b", think=think).chat("สวัสดี")
+        assert "think" not in captured, f"think={think!r} ไม่ควรถูกส่ง"
