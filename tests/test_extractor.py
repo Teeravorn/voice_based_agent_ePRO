@@ -7,6 +7,7 @@
 from __future__ import annotations
 
 import sys
+from difflib import SequenceMatcher
 from pathlib import Path
 
 import pytest
@@ -18,7 +19,9 @@ from engine import LLMResponse, LLMUnavailable  # noqa: E402
 from evaluation.manifest import load_manifest  # noqa: E402
 from extractor import OptionExtractor, load_form  # noqa: E402
 from extractor.prompt import (  # noqa: E402
+    LOGIT_SYSTEM_PROMPT,
     META_INTENTS,
+    SYSTEM_PROMPT,
     REASON_MIN_CHARS,
     UNDECIDED,
     build_schema,
@@ -311,3 +314,23 @@ def test_chat_never_sends_think_in_free_text_mode(monkeypatch):
         captured = _capture_ollama_call(monkeypatch)
         ChatEngine(model="qwen3:4b", think=think).chat("สวัสดี")
         assert "think" not in captured, f"think={think!r} ไม่ควรถูกส่ง"
+
+
+# --- ข้อสอบต้องไม่หลุดเข้าไปใน prompt -------------------------------------
+
+# ข้อความยาวเท่านี้ที่ตรงกันเป๊ะถือว่าหลุด วัดจาก prompt เดิมที่หลุดจริง: ประโยคที่ลอกมา
+# ซ้ำกันยาว 11-25 ตัวอักษร ส่วนคำทั่วไปที่บังเอิญซ้ำ เช่น "เกือบทุก" "เมื่อก่อน" ยาวไม่เกิน 9
+LEAK_MIN_CHARS = 10
+
+
+@pytest.mark.parametrize("prompt_name", ["SYSTEM_PROMPT", "LOGIT_SYSTEM_PROMPT"])
+def test_prompt_does_not_leak_manifest(prompt_name):
+    """ตัวอย่างใน prompt ต้องไม่ใช่ประโยคเดียวกับข้อสอบ ไม่อย่างนั้นความแม่นที่วัดได้จะสูงเกินจริง"""
+    prompt = {"SYSTEM_PROMPT": SYSTEM_PROMPT, "LOGIT_SYSTEM_PROMPT": LOGIT_SYSTEM_PROMPT}[prompt_name]
+    for row in load_manifest(MANIFEST_PATH):
+        script = row.script_th
+        match = SequenceMatcher(None, script, prompt, autojunk=False).find_longest_match(
+            0, len(script), 0, len(prompt)
+        )
+        overlap = script[match.a:match.a + match.size]
+        assert match.size < LEAK_MIN_CHARS, f"{row.audio} ซ้ำกับ {prompt_name}: {overlap!r}"

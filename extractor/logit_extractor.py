@@ -8,6 +8,9 @@
   แต่ไปอ่าน logprob ของตัวเลือกทุกตัวที่ตำแหน่งนั้น ทำ softmax เฉพาะในกลุ่มตัวเลือก
   แล้วเอาตัวที่ probability สูงสุด
 
+ใช้กฎและ few-shot ชุดเดียวกับ ``OptionExtractor`` (``LOGIT_SYSTEM_PROMPT`` ใน prompt.py)
+เพื่อให้เทียบกันได้ว่าต่างกันแค่วิธีอ่านคำตอบ ไม่ใช่ prompt
+
 ข้อดีที่ได้มาคือ **probability distribution ของทุกระดับคะแนน** เหมือนที่ SystemOne ให้
 ซึ่งเอาไปตัดสินได้ว่าควรถามผู้ป่วยย้ำไหม ต่างจาก confidence ที่ LLM รายงานเองซึ่งวนอยู่
 แค่ 0.85/0.90/0.95
@@ -18,29 +21,24 @@
 
 from __future__ import annotations
 
+import json
 import math
+import re
 import time
 from dataclasses import dataclass
 
 from engine import ChatEngine, LLMUnavailable
 
 from .forms import Form, Item, Scale
-from .option_extractor import ExtractionResult
-from .prompt import META_INTENTS, UNDECIDED, build_user_prompt
-
-SYSTEM_PROMPT = """คุณเป็นแบบจำลองตัดสินใจ (decision model) ไม่ใช่ผู้ช่วยสนทนา
-
-หน้าที่ของคุณคือเลือกคะแนนที่ตรงกับคำตอบของผู้ป่วยมากที่สุด โดยเทียบสิ่งที่ผู้ป่วยเล่า
-กับคำอธิบายของแต่ละตัวเลือก ผู้ป่วยส่วนใหญ่ไม่ได้พูดชื่อตัวเลือกออกมาตรง ๆ
-
-หลักการตัดสิน
-- ถ้าคำตอบบอกเป็นนัยว่าอาการอยู่ระดับไหน ให้เลือกระดับนั้น
-- ถ้าลังเลระหว่างสองระดับ ให้เลือกระดับที่ใกล้เคียงกว่า
-- เลือก 0 เฉพาะเมื่อผู้ป่วยไม่ได้ตอบคำถามเลย เช่น ขอให้ทวนคำถาม หรือพูดเรื่องอื่น
-- ระวังประโยคปฏิเสธซ้อน ให้ตัดสินจากสภาพตอนนี้ ไม่ใช่การเปรียบเทียบกับอดีต
-
-ตอบด้วยตัวเลขของตัวเลือกเพียงตัวเดียว ห้ามมีคำอธิบาย ห้ามมีเครื่องหมายวรรคตอน
-ห้ามมีข้อความอื่นใดนอกจากตัวเลขนั้น"""
+from .option_extractor import ExtractionResult, OptionExtractor
+from .prompt import (
+    LOGIT_SYSTEM_PROMPT,
+    META_INTENTS,
+    SYSTEM_PROMPT,
+    UNDECIDED,
+    build_schema,
+    build_user_prompt,
+)
 
 ANSWER_CUE = "\n\nตอบด้วยตัวเลขตัวเดียว:"
 
@@ -53,7 +51,7 @@ META_PROMPT = """คุณเป็นแบบจำลองตัดสิน
 
 # ตัวเลือกของคำถาม meta เรียงตามหมายเลขที่ใช้ใน prompt
 META_OPTIONS: tuple[tuple[str, str], ...] = (
-    ("repeat", "ขอให้ทวนคำถาม บอกว่าฟังไม่ชัด หรือถามว่าเมื่อกี้ถามอะไร"),
+    ("repeat", "ขอให้ทวนคำถาม บอกว่าฟังไม่ชัด หรือขอให้พูดอีกรอบ"),
     ("dont_know", "บอกว่าไม่รู้ ไม่แน่ใจ จำไม่ได้ หรือไม่เคยทำกิจกรรมนั้น"),
     ("need_help", "บอกว่าไม่เข้าใจคำถาม ขอให้อธิบายเพิ่ม"),
     ("out_of_scope", "พูดเรื่องอื่นที่ไม่เกี่ยวกับอาการหรือคำถามเลย"),
@@ -85,6 +83,44 @@ def softmax_over(logprobs: dict[int, float]) -> dict[int, float]:
     weights = {key: math.exp(value - top) for key, value in logprobs.items()}
     total = sum(weights.values())
     return {key: value / total for key, value in weights.items()}
+
+
+def option_logprobs(entry: dict, options: list[int]) -> dict[int, float]:
+    """ดึง logprob ของ ``options`` จาก ``top_logprobs`` ของ token หนึ่งตำแหน่ง"""
+    wanted = {str(option): option for option in options}
+    logprobs: dict[int, float] = {}
+    for candidate in entry.get("top_logprobs") or []:
+        token = (candidate.get("token") or "").strip()
+        if token in wanted:
+            option = wanted[token]
+            # token เดียวกันอาจโผล่หลายรูปแบบ เก็บค่าที่สูงสุดไว้
+            logprobs[option] = max(logprobs.get(option, -math.inf), candidate["logprob"])
+    return logprobs
+
+
+# key ``"value"`` ของ JSON ที่ไม่ได้อยู่ในสตริง (ใน reason จะถูก escape เป็น \"value\")
+_VALUE_KEY = re.compile(r'(?<!\\)"value"\s*:')
+
+
+def find_value_position(entries: list[dict]) -> int | None:
+    """หาตำแหน่ง token ของค่า ``value`` ใน JSON ที่โมเดลเขียน
+
+    ต่อ token ทั้งหมดกลับเป็นข้อความ หา key ``"value":`` แล้วเอา token แรกที่ไม่ใช่
+    ช่องว่างหลังจากนั้น ถ้า token นั้นไม่ใช่ตัวเลขล้วน (เช่น tokenizer รวมกับเครื่องหมาย
+    อื่น) คืน None เพราะอ่าน logprob ของตัวเลือกจากตำแหน่งนั้นไม่ได้
+    """
+    text = "".join(entry.get("token", "") for entry in entries)
+    match = _VALUE_KEY.search(text)
+    if match is None:
+        return None
+
+    offset = 0
+    for index, entry in enumerate(entries):
+        token = entry.get("token", "")
+        if offset >= match.end() and token.strip():
+            return index if token.strip().isdigit() else None
+        offset += len(token)
+    return None
 
 
 class LogitExtractor:
@@ -126,13 +162,7 @@ class LogitExtractor:
             return _Decision(None, {}, list(options), response.text.strip(), None)
 
         entry = entries[position]
-        logprobs: dict[int, float] = {}
-        for candidate in entry.get("top_logprobs") or []:
-            token = (candidate.get("token") or "").strip()
-            if token in wanted:
-                option = wanted[token]
-                # token เดียวกันอาจโผล่หลายรูปแบบ เก็บค่าที่สูงสุดไว้
-                logprobs[option] = max(logprobs.get(option, -math.inf), candidate["logprob"])
+        logprobs = option_logprobs(entry, options)
 
         probabilities = softmax_over(logprobs)
         missing = [option for option in options if option not in logprobs]
@@ -163,7 +193,7 @@ class LogitExtractor:
 
         user_prompt = build_user_prompt(transcript, item, scale) + ANSWER_CUE
         messages = [
-            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "system", "content": LOGIT_SYSTEM_PROMPT},
             {"role": "user", "content": user_prompt},
         ]
         options = [UNDECIDED, *scale.values]
@@ -261,3 +291,118 @@ class LogitExtractor:
 
         intent = META_OPTIONS[decision.choice - 1][0]
         return (intent if intent in META_INTENTS else None), raw
+
+
+class ReasonLogitExtractor(OptionExtractor):
+    """ให้โมเดลเขียน reason ก่อนตาม schema เดิม แล้วอ่าน logit ของตัวเลือกที่ตำแหน่ง value
+
+    รวมข้อดีของสองตัวก่อนหน้า
+    - จาก ``OptionExtractor``: prompt, few-shot และ schema ชุดเดียวกันทุกอย่าง โมเดลได้
+      เขียนเหตุผลก่อนตัดสิน (``LogitExtractor`` ต้องฟันธงที่ token แรก ซึ่งแม่นน้อยกว่า)
+    - จาก ``LogitExtractor``: probability distribution ของทุกระดับคะแนน แทน confidence
+      ที่โมเดลเขียนเองซึ่งวนอยู่แค่ 0.85/0.90/0.95
+
+    ข้อควรรู้: ที่ temperature 0 token ที่โมเดลเขียนคือตัวที่ logprob สูงสุดอยู่แล้ว
+    argmax จึงแทบเท่ากับ value ที่เขียนเสมอ (ต่างกันได้เฉพาะเมื่อ grammar ตัด token
+    อันดับหนึ่งทิ้ง) exact match จึงไม่ควรต่างจาก ``OptionExtractor`` สิ่งที่ได้เพิ่มคือ
+    distribution ซึ่งใช้ตัดสินว่าควรถามย้ำไหม และใช้คิด ``value_expected`` ที่เก็บไว้ใน raw
+
+    meta_intent ยังอ่านจาก JSON ที่โมเดลเขียน ไม่ต้องยิงครั้งที่สองแบบ ``LogitExtractor``
+    """
+
+    name = "reason-logit"
+
+    def __init__(self, engine: ChatEngine, form: Form, top_logprobs: int = 20):
+        super().__init__(engine=engine, form=form)
+        self.top_logprobs = top_logprobs
+
+    def extract_for(self, transcript: str, item: Item, scale: Scale) -> ExtractionResult:
+        started = time.perf_counter()
+
+        if not transcript or not transcript.strip():
+            return ExtractionResult(
+                reason_th="ไม่มีข้อความให้วิเคราะห์",
+                error="empty_transcript",
+                latency_ms=(time.perf_counter() - started) * 1000,
+            )
+
+        user_prompt = build_user_prompt(transcript, item, scale)
+        messages = [
+            {"role": "system", "content": SYSTEM_PROMPT},
+            {"role": "user", "content": user_prompt},
+        ]
+
+        try:
+            response = self.engine.chat_logprobs(
+                messages, format=build_schema(scale), top_logprobs=self.top_logprobs
+            )
+        except LLMUnavailable as exc:
+            return ExtractionResult(
+                reason_th=f"เรียก LLM ไม่ได้: {exc}",
+                error=str(exc),
+                latency_ms=(time.perf_counter() - started) * 1000,
+                raw={"prompt": user_prompt},
+            )
+
+        try:
+            data = json.loads(response.text)
+        except json.JSONDecodeError:
+            data = None
+        if not isinstance(data, dict):
+            return ExtractionResult(
+                reason_th="โมเดลตอบมาไม่ใช่ JSON object",
+                error="invalid_json",
+                latency_ms=(time.perf_counter() - started) * 1000,
+                raw={"prompt": user_prompt, "text": response.text[:500]},
+            )
+
+        # อ่าน reason / meta_intent / ค่าที่เขียนด้วยกติกาเดียวกับ OptionExtractor ก่อน
+        result = self._to_result(data, scale, user_prompt, response, started)
+
+        options = [UNDECIDED, *scale.values]
+        position = find_value_position(response.entries)
+        logprobs = option_logprobs(response.entries[position], options) if position is not None else {}
+        probabilities = softmax_over(logprobs)
+
+        result.raw.update({
+            "probabilities": {str(k): round(v, 4) for k, v in probabilities.items()},
+            "missing_from_top_logprobs": [option for option in options if option not in logprobs],
+            "value_ที่โมเดลเขียน": data.get("value"),
+            "confidence_ที่โมเดลเขียน": data.get("confidence"),
+            "value_expected": expected_value(probabilities, scale),
+            "answer_position": position,
+            "eval_count": response.eval_count,
+            "think": self.engine.think,
+        })
+
+        if not probabilities:
+            # อ่าน logprob ไม่ได้ ใช้ value ที่โมเดลเขียนต่อไป แต่ไม่มี confidence ให้เชื่อ
+            result.confidence = 0.0
+            result.raw["fallback"] = "value_ที่โมเดลเขียน"
+            return result
+
+        choice = max(probabilities, key=probabilities.get)
+        result.confidence = probabilities[choice]
+        if choice == UNDECIDED or not scale.is_valid(choice):
+            result.value = None
+            result.label = None
+        else:
+            result.value = choice
+            result.label = scale.label(choice)
+        return result
+
+
+def expected_value(probabilities: dict[int, float], scale: Scale) -> int | None:
+    """ค่าคาดหวังของคะแนน ปัดเป็นจำนวนเต็ม คิดเฉพาะค่าที่อยู่ใน scale
+
+    ไม่รวม 0 (แปลงไม่ได้) เพราะไม่ใช่ระดับอาการ ถ้ารวมเข้าไปจะดึงค่าลงผิดทิศ
+    และคืน None เมื่อ 0 มี probability สูงสุด เพราะคำตอบนั้นไม่ควรได้คะแนนตั้งแต่แรก
+    เก็บไว้เทียบกับ argmax เหมือนที่ SystemOne พบว่า expected แม่นกว่า
+    """
+    if probabilities and max(probabilities, key=probabilities.get) == UNDECIDED:
+        return None
+    weights = {value: p for value, p in probabilities.items() if scale.is_valid(value)}
+    total = sum(weights.values())
+    if total <= 0:
+        return None
+    return round(sum(value * p for value, p in weights.items()) / total)

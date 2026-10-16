@@ -137,6 +137,7 @@ class ChatEngine:
         *,
         num_predict: int | None = None,
         top_logprobs: int = 20,
+        format: dict | None = None,
     ) -> LogprobResponse:
         """เรียก LLM แล้วขอ logprob ของทุกตำแหน่งที่สร้าง token
 
@@ -146,6 +147,11 @@ class ChatEngine:
         ``top_logprobs`` ของ Ollama จำกัดไว้ที่ 20 (ขอมากกว่านั้นจะถูกปฏิเสธ)
         ซึ่งพอสำหรับสเกล 5-6 ระดับ แต่ถ้าตัวเลือกไหนหลุดจาก 20 อันดับแรก
         จะไม่มี logprob กลับมา ผู้เรียกต้องจัดการกรณีนั้นเอง
+
+        ส่ง ``format`` (JSON schema) ไปด้วยได้ เพื่อให้โมเดลเขียน reason ก่อนแล้วค่อยอ่าน
+        logprob ที่ตำแหน่ง value ทดสอบกับ Ollama 0.34 แล้วพบว่า logprob ที่คืนมาเป็นของ
+        distribution ดิบ**ก่อน** grammar กรอง (token นอก enum เช่น ``6`` ก็ยังโผล่มา)
+        ผู้เรียกจึงต้องกรองให้เหลือแค่ตัวเลือกเอง
         """
         started = time.perf_counter()
         options = dict(self.options)
@@ -156,6 +162,7 @@ class ChatEngine:
             response: ChatResponse = chat(
                 model=self.model,
                 messages=messages,
+                format=format,
                 options=options,
                 think=self.think,
                 stream=False,

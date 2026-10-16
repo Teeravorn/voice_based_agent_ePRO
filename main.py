@@ -47,9 +47,10 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
     parser = argparse.ArgumentParser(description=__doc__, formatter_class=argparse.RawDescriptionHelpFormatter)
     parser.add_argument("--mode", choices=["text", "asr", "both"], default="text",
                         help="text = ข้าม ASR, asr = ถอดเสียงจริง, both = รันทั้งสองแล้วเทียบกัน")
-    parser.add_argument("--engine", choices=["ollama", "logit", "systemone"], default="ollama",
+    parser.add_argument("--engine", choices=["ollama", "logit", "reason-logit", "systemone"], default="ollama",
                         help="ollama = qwen แบบ generative เขียน JSON, "
                              "logit = qwen แบบ decision model อ่าน logit ของตัวเลือกมาทำ softmax, "
+                             "reason-logit = qwen เขียน JSON (reason ก่อน) แล้วอ่าน logit ที่ตำแหน่ง value, "
                              "systemone = OpenThai-SystemOne decision head")
     parser.add_argument("--model", default=None,
                         help="ชื่อโมเดล (ollama: qwen3:4b, systemone: iapp/OpenThai-SystemOne)")
@@ -58,7 +59,7 @@ def parse_args(argv: list[str] | None = None) -> argparse.Namespace:
                              "โดยความแม่นเท่ากัน (ดู docstring ของ ChatEngine.chat_json) "
                              "ไม่ระบุ = ใช้ค่าตั้งต้นของ ChatEngine")
     parser.add_argument("--num-ctx", type=int, default=None,
-                        help="เฉพาะ ollama/logit: context window ค่าตั้งต้น 4096 ซึ่งไม่พอเมื่อเปิด "
+                        help="เฉพาะ ollama/logit/reason-logit: context window ค่าตั้งต้น 4096 ซึ่งไม่พอเมื่อเปิด "
                              "thinking (reasoning กิน context หมดก่อนเขียนคำตอบ) ใช้ 16384 ขึ้นไป")
     parser.add_argument("--decision", choices=["expected", "argmax"], default="expected",
                         help="เฉพาะ systemone: แปลง distribution เป็นคะแนนเดียวด้วยวิธีไหน "
@@ -116,6 +117,9 @@ def run_text_mode(rows: list[ManifestRow], extractor: OptionExtractor) -> list[R
     for index, row in enumerate(rows, start=1):
         print(f"  [{index}/{len(rows)}] {row.audio} (text)", flush=True)
         result = extractor.extract(row.script_th, row.item_id)
+
+        print("result", result)
+
         records.append(RunRecord(row=row, mode="text", transcript=row.script_th, result=result))
     return records
 
@@ -194,16 +198,17 @@ def main(argv: list[str] | None = None) -> int:
                 print(f"manifest ผิด: {row.audio} เฉลย {gold} ไม่อยู่ใน scale {scale.id} ของ {row.item_id}")
                 return 1
 
-    if args.engine == "logit":
-        from extractor.logit_extractor import LogitExtractor
+    if args.engine in ("logit", "reason-logit"):
+        from extractor.logit_extractor import LogitExtractor, ReasonLogitExtractor
 
         model_name = args.model or "qwen3.5:4b"
         engine = ChatEngine(model=model_name, **build_engine_kwargs(args))
         if not engine.health():
             print("เรียก Ollama ไม่ได้ ตรวจว่า server รันอยู่หรือยัง (ollama serve) แล้วลองใหม่")
             return 1
-        extractor = LogitExtractor(engine=engine, form=form)
-        model_label = f"{model_name} (logit, think={engine.think})"
+        extractor_class = LogitExtractor if args.engine == "logit" else ReasonLogitExtractor
+        extractor = extractor_class(engine=engine, form=form)
+        model_label = f"{model_name} ({args.engine}, think={engine.think})"
     elif args.engine == "systemone":
         from extractor.systemone_extractor import MODEL_ID, SystemOneExtractor
 
