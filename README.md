@@ -24,8 +24,30 @@ POC นี้ยังไม่ใช่ตัวระบบเต็ม แต
 
 ### สิ่งที่ยังไม่มีใน POC นี้
 
-dialogue manager / state machine, TTS และเสียงคำถามที่ pre-render ไว้, ภาพประกอบ,
-การคิดคะแนนรวมของ DASH, WangchanBERTa และการเก็บข้อมูลจากผู้ป่วยจริง
+TTS และเสียงคำถามที่ pre-render ไว้, ภาพประกอบ, การอัดเสียงสด, แบบประเมิน TESS,
+WangchanBERTa และการเก็บข้อมูลจากผู้ป่วยจริง
+
+### Score calculator
+
+`scoring/calculator.py` คิดคะแนนรวมตามสูตร DASH ((ผลรวม / n) - 1) x 25 โดยอ่านจำนวนข้อขั้นต่ำ
+จาก `sections[].scoring` ในไฟล์ฟอร์ม ข้อที่ส่งให้พยาบาลตรวจนับเป็นข้อที่ไม่ตอบ จนกว่าจะส่งคะแนน
+ที่ยืนยันแล้วเข้า `DialogueManager.scores(confirmed={...})`
+
+### Dialogue manager
+
+`dialogue/manager.py` ควบคุมบทสนทนาแบบ finite-state machine ไม่ได้เล่นหรืออัดเสียงเอง
+แต่คืน action (`Say`, `ShowImage`, `Listen`, `End`) ให้ตัวเล่นเสียงไปทำ จึงจำลองด้วยการพิมพ์ได้
+
+```bash
+python -m dialogue                                   # พิมพ์คำตอบเอง
+python -m dialogue --script answers.txt              # อ่านคำตอบทีละบรรทัด
+python -m dialogue --engine reason-logit --threshold 0.7 --max-attempts 3
+```
+
+คำตอบที่ confidence ถึงเกณฑ์จะบันทึกแล้วไปข้อถัดไป ถ้าไม่ถึงหรือผู้ป่วยขอให้ทวน / ไม่เข้าใจ / ไม่รู้
+ระบบจะตอบสนองตามเจตนาแล้วฟังใหม่ ครบ `max-attempts` ครั้งแล้วยังไม่ได้ จะส่งข้อนั้นให้พยาบาลตรวจ
+ผู้ป่วยพูด "ย้อนกลับ" หรือ "ขอหยุด" ได้ ผล session รวมเวลาที่ผู้ป่วยใช้ (`patient_time_s`)
+ถูกเก็บเป็น JSON ใน `evaluation/results/dialogue_*.json`
 
 ---
 

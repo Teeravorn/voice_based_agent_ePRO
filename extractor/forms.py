@@ -62,6 +62,44 @@ class Item:
     section_id: str
     image: str | None = None
     keywords_th: tuple[str, ...] = ()
+    image_caption_th: str = ""
+
+
+@dataclass(frozen=True)
+class Gate:
+    """คำถามคัดกรองก่อนเข้าชุดคำถามเสริม เช่น "ตอนนี้ท่านทำงานอยู่หรือเปล่าคะ"
+
+    ตอบเป็น scale (ปกติคือ ``yes_no``) ถ้าได้ ``skip_on_value`` จะข้ามทั้งชุด
+    """
+
+    id: str
+    scale_id: str
+    prompt_th: str
+    skip_on_value: int
+    skip_message_th: str = ""
+
+
+@dataclass(frozen=True)
+class FreeText:
+    """คำถามปลายเปิดที่เก็บคำตอบเป็นข้อความ ไม่ได้คิดคะแนน เช่น อาชีพของผู้ป่วย"""
+
+    id: str
+    prompt_th: str
+    field_th: str = ""
+
+
+@dataclass(frozen=True)
+class Section:
+    """ชุดคำถามหนึ่งชุด เรียงตามลำดับในไฟล์ ``item_ids`` คือลำดับที่ต้องถาม"""
+
+    id: str
+    name_th: str
+    required: bool
+    item_ids: tuple[str, ...]
+    gate: Gate | None = None
+    free_text: FreeText | None = None
+    intro_th: str = ""
+    scoring: dict = field(default_factory=dict)
 
 
 @dataclass(frozen=True)
@@ -72,6 +110,9 @@ class Form:
     recall_period_th: str
     scales: dict[str, Scale] = field(default_factory=dict)
     items: dict[str, Item] = field(default_factory=dict)
+    sections: tuple[Section, ...] = ()
+    # ข้อความที่ dialogue manager พูด (greeting, ขอให้ตอบใหม่ ฯลฯ) key ตามไฟล์ฟอร์ม
+    speech: dict[str, str] = field(default_factory=dict)
 
     def item(self, item_id: str) -> Item:
         try:
@@ -119,8 +160,43 @@ def load_form(path: str | Path) -> Form:
     }
 
     items: dict[str, Item] = {}
+    sections: list[Section] = []
     for section in raw.get("sections", []):
         section_id = section.get("id", "")
+        gate = None
+        if section.get("gate"):
+            gate_raw = section["gate"]
+            if gate_raw["scale"] not in scales:
+                raise ValueError(
+                    f"gate {gate_raw['id']!r} ในไฟล์ {path} อ้าง scale {gate_raw['scale']!r} ที่ไม่มีอยู่จริง"
+                )
+            gate = Gate(
+                id=gate_raw["id"],
+                scale_id=gate_raw["scale"],
+                prompt_th=gate_raw["prompt_th"],
+                skip_on_value=int(gate_raw["skip_on_value"]),
+                skip_message_th=gate_raw.get("skip_message_th", ""),
+            )
+        free_text = None
+        if section.get("free_text"):
+            free_raw = section["free_text"]
+            free_text = FreeText(
+                id=free_raw["id"],
+                prompt_th=free_raw["prompt_th"],
+                field_th=free_raw.get("field_th", ""),
+            )
+        sections.append(
+            Section(
+                id=section_id,
+                name_th=section.get("name_th", ""),
+                required=bool(section.get("required", True)),
+                item_ids=tuple(item_raw["id"] for item_raw in section.get("items", [])),
+                gate=gate,
+                free_text=free_text,
+                intro_th=section.get("intro_th", ""),
+                scoring=dict(section.get("scoring", {})),
+            )
+        )
         for item_raw in section.get("items", []):
             item_id = item_raw["id"]
             scale_id = item_raw["scale"]
@@ -139,6 +215,7 @@ def load_form(path: str | Path) -> Form:
                 section_id=section_id,
                 image=item_raw.get("image"),
                 keywords_th=tuple(item_raw.get("keywords_th", ())),
+                image_caption_th=item_raw.get("image_caption_th", ""),
             )
 
     return Form(
@@ -148,4 +225,6 @@ def load_form(path: str | Path) -> Form:
         recall_period_th=raw.get("recall_period_th", ""),
         scales=scales,
         items=items,
+        sections=tuple(sections),
+        speech=dict(raw.get("speech", {})),
     )

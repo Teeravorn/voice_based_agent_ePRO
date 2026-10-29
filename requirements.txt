@@ -13,4 +13,7 @@ accelerate==1.13.0
 numpy==2.4.3
 ollama==0.6.2
 
+# อ่าน PDF แบบสอบถาม (tools/pdf_to_form.py)
+pymupdf==1.28.2
+
 pytest==9.1.1
